@@ -73,7 +73,7 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    @Scheduled(fixedDelay = 3 * 60 * 1000)
+    @Scheduled(fixedDelay = 60 * 60 * 1000) //1 hour
     public void check() {
         try {
             URL url = new URL("https://germania.diplo.de/ru-ru/vertretungen/gk-stpe/abholung/1670304");
@@ -85,13 +85,15 @@ public class Bot extends TelegramLongPollingBot {
             List<String> lastAccepted = getLastAccepted(body);
             LOGGER.info("Successfully parsed web page, got {} numbers.", lastAccepted.size());
             List<String> unseen = saveAndFindNewEntries(lastAccepted);
-            LOGGER.info("Compared to saved, found {} new numbers.", lastAccepted.size());
-            if (unseen != null && unseen.size() != 0) {
+            LOGGER.info("Compared to saved, found {} new numbers.", unseen.size());
+            if (unseen.size() != 0) {
                 sendListToUser(unseen);
                 saveUnseen(unseen);
+                LOGGER.info("Sent message to user about new numbers.");
             } else if (isTriggered) {
                 sendNoNewsMessage();
                 isTriggered = false;
+                LOGGER.info("Sent message to user about new numbers.");
             }
         } catch (IOException e) {
             LOGGER.error("Problem: {}", e.getMessage());
@@ -104,7 +106,7 @@ public class Bot extends TelegramLongPollingBot {
                 .map(Visa::new)
                 .collect(Collectors.toList());
         visaRepository.saveAll(toSave);
-        LOGGER.info("Save {} new numbers.", unseen.size());
+        LOGGER.info("Save {} new numbers to mongo.", unseen.size());
     }
 
     private List<String> getLastAccepted(String page) {
